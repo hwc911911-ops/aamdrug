@@ -49,9 +49,10 @@ export function useAddTransaction() {
       
       if (error) throw error;
       
-      // Update batch quantity if batch specified
-      if (transaction.batch_id) {
-        const netChange = transaction.received - transaction.used;
+      // Only update batch quantity if batch is specified AND there's usage from that batch
+      // For new batches, the quantity is already set correctly during batch creation
+      // Only deduct from batch when "used" is recorded against that specific batch
+      if (transaction.batch_id && transaction.used > 0) {
         const { data: batch } = await supabase
           .from('drug_batches')
           .select('current_quantity')
@@ -59,9 +60,10 @@ export function useAddTransaction() {
           .single();
         
         if (batch) {
+          const newQuantity = Math.max(0, batch.current_quantity - transaction.used);
           await supabase
             .from('drug_batches')
-            .update({ current_quantity: batch.current_quantity + netChange })
+            .update({ current_quantity: newQuantity })
             .eq('id', transaction.batch_id);
         }
       }
