@@ -59,6 +59,12 @@ export default function DailyEntry() {
       return;
     }
 
+    // Validate: existing batch should only be selected when using stock
+    if (selectedBatchId && !isNewBatch && received > 0 && used === 0) {
+      toast.error('Select "Add New Batch" when receiving stock, or leave batch empty');
+      return;
+    }
+
     try {
       let batchId = selectedBatchId;
 
